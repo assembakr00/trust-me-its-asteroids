@@ -1,8 +1,14 @@
 import pygame
-from constants import SCREEN_HEIGHT
-from constants import SCREEN_WIDTH
+from constants import (SCREEN_HEIGHT, 
+                       SCREEN_WIDTH, 
+                       ASTEROID_KINDS,
+                       ASTEROID_SPAWN_RATE_SECONDS,
+                       ASTEROID_MAX_RADIUS, 
+                       ASTEROID_MIN_RADIUS)
 from logger import log_state
 import player
+import asteroid
+import asteroidfield
 
 def main():
     pygame.init()
@@ -17,9 +23,13 @@ def main():
 
     drawable = pygame.sprite.Group()
     updatable = pygame.sprite.Group()
+    asteroids = pygame.sprite.Group()
     player.Player.containers = (updatable, drawable)
+    asteroid.Asteroid.containers = (updatable, drawable, asteroids)
+    asteroidfield.AsteroidField.containers = (updatable)
 
     player.Player(x=SCREEN_WIDTH / 2, y=SCREEN_HEIGHT / 2)
+    asteroidfield.AsteroidField()
 
     while True:
         log_state()

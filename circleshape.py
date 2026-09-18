@@ -6,7 +6,7 @@ class CircleShape(pygame.sprite.Sprite):
     containers: tuple[pygame.sprite.Group, ...]
 
     def __init__(self, x: float, y: float, radius: float) -> None:
-        # we will be using this later
+        
         if hasattr(self, "containers"):
             super().__init__(*self.containers)
         else:
@@ -15,6 +15,9 @@ class CircleShape(pygame.sprite.Sprite):
         self.position: pygame.Vector2 = pygame.Vector2(x, y)
         self.velocity = pygame.Vector2(0, 0)
         self.radius = radius
+
+
+    def collides_with(self, other):
 
     def draw(self, screen: pygame.Surface) -> None:
         # must override
