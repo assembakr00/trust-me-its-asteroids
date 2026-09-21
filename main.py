@@ -1,14 +1,22 @@
 import pygame
+import sys
 from constants import (SCREEN_HEIGHT, 
                        SCREEN_WIDTH, 
                        ASTEROID_KINDS,
                        ASTEROID_SPAWN_RATE_SECONDS,
                        ASTEROID_MAX_RADIUS, 
-                       ASTEROID_MIN_RADIUS)
-from logger import log_state
-import player
-import asteroid
-import asteroidfield
+                       ASTEROID_MIN_RADIUS,
+                       PLAYER_RADIUS,
+                       PLAYER_SPEED,
+                       PLAYER_TURN_SPEED,
+                       PLAYER_SHOOT_SPEED)
+from logger import log_state, log_event
+from player import Player
+from asteroid import Asteroid
+from asteroidfield import AsteroidField
+from shot import Shot
+
+
 
 def main():
     pygame.init()
@@ -23,13 +31,16 @@ def main():
 
     drawable = pygame.sprite.Group()
     updatable = pygame.sprite.Group()
+    players = pygame.sprite.Group()
     asteroids = pygame.sprite.Group()
-    player.Player.containers = (updatable, drawable)
-    asteroid.Asteroid.containers = (updatable, drawable, asteroids)
-    asteroidfield.AsteroidField.containers = (updatable)
+    shots = pygame.sprite.Group()
+    Player.containers = (updatable, drawable, players)
+    Asteroid.containers = (updatable, drawable, asteroids)
+    AsteroidField.containers = (updatable)
+    Shot.containers = (updatable, drawable, shots)
 
-    player.Player(x=SCREEN_WIDTH / 2, y=SCREEN_HEIGHT / 2)
-    asteroidfield.AsteroidField()
+    Player(x=SCREEN_WIDTH / 2, y=SCREEN_HEIGHT / 2)
+    AsteroidField()
 
     while True:
         log_state()
@@ -38,7 +49,18 @@ def main():
                 return
 
         updatable.update(dt)
-        
+
+        for asteroid_obj in asteroids:
+            if any(asteroid_obj.collides_with(player) for player in players):
+                log_event("player_hit")
+                print("Game over!")
+                sys.exit()
+            for shot_obj in shots:
+                if asteroid_obj.collides_with(shot_obj):
+                    log_event("asteroid_shot")
+                    asteroid_obj.split()
+                    shot_obj.kill()
+
         screen.fill("black")
         for obj in drawable:
             obj.draw(screen)
