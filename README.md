@@ -1,12 +1,12 @@
 # Trust Me, It's Asteroids
 
-A small Asteroids-style game built with Python and Pygame. It has a ship, a suspicious number of asteroids, and enough momentum to make a tiny mistake feel very educational.
+A small Asteroids-style game built with Python and Pygame. It has a ship & a buttload number of asteroids and enough momentum to make a tiny mistake feel very dumb.
 
 ## Introduction
 
-The goal is simple: fly around, shoot asteroids, and avoid becoming part of the scenery.
+The goal is simple: fly around, shoot asteroids, and avoid becoming part of the rocks!!
 
-This project started as a hands-on exercise in game loops, sprite groups, vectors, collision detection, and the particular joy of debugging something that moves in four dimensions when you only asked for two.
+This project started as a hands-on exercise in game loops, sprite groups, vectors, collision detection and the particular joy of debugging something that moves in four dimensions when you only asked for two.
 
 ## How It Works
 
@@ -18,9 +18,8 @@ The game runs a Pygame loop that:
 4. Draws the current frame.
 5. Displays the frame and repeats.
 
-Game objects inherit from `CircleShape`, which provides a position, velocity, radius, and circle-based collision detection. Asteroids are drawn with irregular polygon points, so they are technically more lumpy than circles while still using simple circular collision rules.
-
-Large asteroids split into two smaller, faster asteroids when hit. Small asteroids disappear instead. This is a classic arcade solution: when in doubt, make the problem smaller and give it friends.
+Game objects inherit from `CircleShape`, which provides a position, velocity, radius, and circle-based collision detection. Asteroids are drawn with irregular polygon points, so they are technically more lumpy than circles while still using simple circular collision rulesand 
+Large asteroids split into two smaller, faster asteroids when hit. Small asteroids disappear instead This is a classic arcade solution: when in doubt and why not make the problem smaller and give it friends.
 
 ## How To Play
 
@@ -32,16 +31,16 @@ uv run main.py
 
 Controls:
 
-| Key | Action |
-| --- | --- |
-| `W` | Move forward |
-| `S` | Move backward |
-| `A` | Rotate left |
-| `D` | Rotate right |
-| `Space` | Fire |
-| Close the window | Quit |
+ Key | Action 
 
-You start with three lives. Colliding with an asteroid costs one life and sends the ship back to the center. Shooting is limited by a short cooldown, because holding Space should not turn the ship into an accidental paintball turret.
+ W to Move forward 
+ S to Move backward |
+ A to Rotate left |
+ D to Rotate right |
+ Space to Fire |
+ Close the window to Quit |
+
+You start with three lives. Colliding with an asteroid costs one life and sends the ship back to the center. Shooting is limited by a short cooldown because holding Space should not turn the ship into an accidental paintball turret.
 
 ## Running Checks
 

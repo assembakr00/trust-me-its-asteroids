@@ -53,22 +53,25 @@ def main():
         updatable.update(dt)
 
         for asteroid_obj in asteroids:
-            if any(asteroid_obj.collides_with(player) for player in players):
-                lives -= 1
-                log_event("player_hit")
+            for player_obj in players:
+                if player_obj.invulnerable_timer > 0:
+                    continue
 
-                if lives <= 0:
-                    print("Game over!")
-                    sys.exit()
+                if asteroid_obj.collides_with(player_obj):
+                    lives -= 1
+                    player_obj.invulnerable_timer = 2.0
+                    log_event("player_hit")
 
-                for player_obj in players:
+                    if lives <= 0:
+                        print("Game over!")
+                        sys.exit()
+
                     player_obj.position = pygame.Vector2(
                         SCREEN_WIDTH / 2,
                         SCREEN_HEIGHT / 2,
                     )
+                    break
 
-                break
-                
             for shot_obj in shots:
                 if asteroid_obj.collides_with(shot_obj):
                     log_event("asteroid_shot")
@@ -76,11 +79,38 @@ def main():
                     shot_obj.kill()
 
         screen.fill("black")
+
+        # draw all game sprites
         for obj in drawable:
             obj.draw(screen)
 
-        pygame.display.flip()
+        # HUD box in top-left
+        hud_rect = pygame.Rect(12, 12, 170, 60)
+        pygame.draw.rect(screen, (35, 35, 35), hud_rect, border_radius=10)
+        pygame.draw.rect(screen, (180, 180, 180), hud_rect, 2, border_radius=10)
 
+        heart_count = lives
+        heart_start_x = hud_rect.x + (hud_rect.width - heart_count * 28) // 2
+        heart_y = hud_rect.y + 18
+
+        for i in range(lives):
+            x = heart_start_x + i * 28
+            pygame.draw.polygon(
+                screen,
+                (255, 90, 90),
+                [
+                    (x, heart_y + 8),
+                    (x - 8, heart_y),
+                    (x - 14, heart_y + 8),
+                    (x - 6, heart_y + 20),
+                    (x, heart_y + 28),
+                    (x + 6, heart_y + 20),
+                    (x + 14, heart_y + 8),
+                    (x + 8, heart_y),
+                ],
+            )
+
+        pygame.display.flip()
 
         dt = clock.tick(60) / 1000
 
