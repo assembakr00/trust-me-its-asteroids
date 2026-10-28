@@ -56,12 +56,12 @@ The game also writes runtime events and state snapshots to JSON Lines files. The
 
 Ideas for future versions:
 
-- Draw a small heart-based lives display instead of showing lives only through behavior.
-- Add a short invulnerability period after respawning.
+- Draw a small heart-based lives display instead of showing lives only through behavior(done)
+- Add a short invulnerability period after respawning.(done)
 - Add a score and a high-score table.
 - Add sound effects and background music.
 - Add a start screen, pause screen, and game-over screen.
-- Add screen wrapping so objects leaving one edge return from the opposite side.
+- Add screen wrapping so objects leaving one edge return from the opposite side.(done)
 - Add particle effects when asteroids split.
 - Add different weapon types and power-ups.
 - Add a browser build for itch.io or GitHub Pages.
@@ -69,3 +69,4 @@ Ideas for future versions:
 ## Project Status
 
 This is a small learning project in active development. The game is playable, but the asteroid field remains committed to making every quiet moment feel temporary.
+and i just read what i wrote and damn i may compete with ai for whos readme has an ai look >:{
