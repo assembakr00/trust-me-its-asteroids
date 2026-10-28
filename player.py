@@ -41,6 +41,7 @@ class Player(CircleShape):
         moved_direction = move_vector.rotate(self.rotation)
 
         self.position += moved_direction * dt * PLAYER_SPEED
+        self.wrap_position()
 
 
     def update(self, dt: float) -> None:
