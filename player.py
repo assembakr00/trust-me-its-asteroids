@@ -19,8 +19,16 @@ PLAYER_SPRITE_SCALE = 1.5
 class Player(CircleShape):
     containers: tuple[pygame.sprite.Group, ...]
 
-    def __init__(self, x, y):
+    def __init__(
+        self,
+        x: float,
+        y: float,
+        shots: pygame.sprite.Group | None = None,
+        shot_limit: int | None = None,
+    ):
         super().__init__(x, y, PLAYER_RADIUS)
+        self.shots = shots
+        self.shot_limit = shot_limit
         self.rotation = 0.0
         self.shoot_cooldown = 0.0
         self.invulnerable_timer = 0.0
@@ -36,6 +44,14 @@ class Player(CircleShape):
             pygame.image.load("assets/art/plane-fire.png").convert_alpha(),
             sprite_size,
         )
+        self.fire_sound = None
+        self.thrust_sound = None
+        if pygame.mixer.get_init():
+            self.fire_sound = pygame.mixer.Sound("assets/music/fire/fire.wav")
+            self.fire_sound.set_volume(0.35)
+            self.thrust_sound = pygame.mixer.Sound("assets/music/thrust/thrust.wav")
+            self.thrust_sound.set_volume(0.25)
+        self.thrust_channel = None
         self.thrusting = False
 
     def draw(self, screen) -> None:
@@ -53,14 +69,33 @@ class Player(CircleShape):
     def rotate(self, dt: float):
         self.rotation += PLAYER_TURN_SPEED * dt
 
+    def set_thrusting(self, is_thrusting: bool) -> None:
+        self.thrusting = is_thrusting
+        if self.thrust_sound is None:
+            return
+        if is_thrusting:
+            if self.thrust_channel is None or not self.thrust_channel.get_busy():
+                self.thrust_channel = self.thrust_sound.play(loops=-1)
+        elif self.thrust_channel is not None:
+            self.thrust_channel.stop()
+            self.thrust_channel = None
+
     def shoot(self) -> None:
         if self.shoot_cooldown > 0:
+            return
+        if (
+            self.shot_limit is not None
+            and self.shots is not None
+            and len(self.shots) >= self.shot_limit
+        ):
             return
 
         forward = pygame.Vector2(0, 1).rotate(self.rotation)
         shot_pos = self.position + forward * (self.visual_radius + SHOT_RADIUS)
         shot = Shot(shot_pos.x, shot_pos.y)
         shot.velocity = forward * PLAYER_SHOOT_SPEED
+        if self.fire_sound is not None:
+            self.fire_sound.play()
         self.shoot_cooldown = PLAYER_SHOOT_COOLDOWN_SECONDS
 
     def take_damage(self, amount: int) -> None:
@@ -93,7 +128,7 @@ class Player(CircleShape):
             self.health_regen_timer = 0.0
 
         keys = pygame.key.get_pressed()
-        self.thrusting = keys[pygame.K_w]
+        self.set_thrusting(keys[pygame.K_w])
 
         if keys[pygame.K_a]:
             self.rotate(-dt)
