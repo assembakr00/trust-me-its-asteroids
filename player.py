@@ -1,9 +1,19 @@
 import pygame
 from circleshape import CircleShape
-from constants import (PLAYER_RADIUS, LINE_WIDTH, PLAYER_TURN_SPEED, 
-                       PLAYER_SPEED, PLAYER_SHOOT_COOLDOWN_SECONDS, 
-                       PLAYER_SHOOT_SPEED, SHOT_RADIUS)
+from constants import (
+    PLAYER_HEALTH_REGEN_INTERVAL_SECONDS,
+    PLAYER_INVULNERABILITY_SECONDS,
+    PLAYER_MAX_HEALTH,
+    PLAYER_RADIUS,
+    PLAYER_SHOOT_COOLDOWN_SECONDS,
+    PLAYER_SHOOT_SPEED,
+    PLAYER_SPEED,
+    PLAYER_TURN_SPEED,
+    SHOT_RADIUS,
+)
 from shot import Shot
+
+PLAYER_SPRITE_SCALE = 1.5
 
 
 class Player(CircleShape):
@@ -14,24 +24,31 @@ class Player(CircleShape):
         self.rotation = 0.0
         self.shoot_cooldown = 0.0
         self.invulnerable_timer = 0.0
-    # in the Player class
-    def triangle(self) -> list[pygame.Vector2]:
-        forward = pygame.Vector2(0, 1).rotate(self.rotation)
-        shot_pos = self.position + forward * (self.radius +  SHOT_RADIUS)
-        shot = Shot(shot_pos.x, shot_pos.y)
-        shot.velocity = self.velocity + forward * PLAYER_SHOOT_SPEED
-        right = pygame.Vector2(0, 1).rotate(self.rotation + 90) * self.radius / 1.5
-        
-        a = self.position + forward * self.radius
-        b = self.position - forward * self.radius - right
-        c = self.position - forward * self.radius + right
+        self.health = PLAYER_MAX_HEALTH
+        self.health_regen_timer = 0.0
+        self.visual_radius = self.radius * PLAYER_SPRITE_SCALE
+        sprite_size = (round(self.visual_radius * 2), round(self.visual_radius * 2))
+        self.ship_image = pygame.transform.scale(
+            pygame.image.load("assets/art/plane.png").convert_alpha(),
+            sprite_size,
+        )
+        self.thrust_image = pygame.transform.scale(
+            pygame.image.load("assets/art/plane-fire.png").convert_alpha(),
+            sprite_size,
+        )
+        self.thrusting = False
 
-        return [a, b, c]
     def draw(self, screen) -> None:
         if self.invulnerable_timer > 0:
             if int(self.invulnerable_timer * 10) % 2 == 0:
                 return
-        pygame.draw.polygon(screen, "white", self.triangle(), LINE_WIDTH)
+
+        image = self.thrust_image if self.thrusting else self.ship_image
+        rotated_image = pygame.transform.rotate(image, 180 - self.rotation)
+        image_rect = rotated_image.get_rect(
+            center=(round(self.position.x), round(self.position.y))
+        )
+        screen.blit(rotated_image, image_rect)
 
     def rotate(self, dt: float):
         self.rotation += PLAYER_TURN_SPEED * dt
@@ -39,10 +56,17 @@ class Player(CircleShape):
     def shoot(self) -> None:
         if self.shoot_cooldown > 0:
             return
-        shot = Shot(self.position.x, self.position.y)
-        vector = pygame.Vector2(0, 1).rotate(self.rotation)
-        shot.velocity = vector * PLAYER_SHOOT_SPEED
+
+        forward = pygame.Vector2(0, 1).rotate(self.rotation)
+        shot_pos = self.position + forward * (self.visual_radius + SHOT_RADIUS)
+        shot = Shot(shot_pos.x, shot_pos.y)
+        shot.velocity = forward * PLAYER_SHOOT_SPEED
         self.shoot_cooldown = PLAYER_SHOOT_COOLDOWN_SECONDS
+
+    def take_damage(self, amount: int) -> None:
+        self.health = max(0, self.health - amount)
+        self.invulnerable_timer = PLAYER_INVULNERABILITY_SECONDS
+        self.health_regen_timer = 0.0
             
 
     def move(self, dt: float) -> None:
@@ -57,7 +81,19 @@ class Player(CircleShape):
     def update(self, dt: float) -> None:
         self.shoot_cooldown = max(0.0, self.shoot_cooldown - dt)
         self.invulnerable_timer = max(0.0, self.invulnerable_timer - dt)
+        if self.health < PLAYER_MAX_HEALTH:
+            self.health_regen_timer += dt
+            while (
+                self.health_regen_timer >= PLAYER_HEALTH_REGEN_INTERVAL_SECONDS
+                and self.health < PLAYER_MAX_HEALTH
+            ):
+                self.health += 1
+                self.health_regen_timer -= PLAYER_HEALTH_REGEN_INTERVAL_SECONDS
+        else:
+            self.health_regen_timer = 0.0
+
         keys = pygame.key.get_pressed()
+        self.thrusting = keys[pygame.K_w]
 
         if keys[pygame.K_a]:
             self.rotate(-dt)
