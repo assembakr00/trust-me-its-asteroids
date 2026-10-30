@@ -69,4 +69,4 @@ Ideas for future versions:
 ## Project Status
 
 This is a small learning project in active development. The game is playable, but the asteroid field remains committed to making every quiet moment feel temporary.
-and i just read what i wrote and damn i may compete with ai for whos readme has an ai look >:{
+and i just read what i wrote and damn i may compete with ai for whos readme has an ai look >:[
