@@ -164,7 +164,7 @@ def main() -> None:
     music_enabled = False
     if audio_enabled:
         pygame.mixer.music.load(
-            resource_path("assets/music/bg.mp3")
+            resource_path("assets/music/bg.ogg")
         )
         pygame.mixer.music.set_volume(0.2)
         pygame.mixer.music.play(-1)
