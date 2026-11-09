@@ -1,56 +1,28 @@
 # Trust Me, It's Asteroids
 
-A small Asteroids-style game built with Python and Pygame. It has a ship & a buttload number of asteroids and enough momentum to make a tiny mistake feel very dumb.
+A small Asteroids-style game built with Python and Pygame. It has a ship & a buttload number of asteroids
 
 ## Introduction
 
 The goal is simple: fly around, shoot asteroids, and avoid becoming part of the rocks!!
 
-This project started as a hands-on exercise in game loops, sprite groups, vectors, collision detection and the particular joy of debugging something that moves in four dimensions when you only asked for two.
-
-## How It Works
-
-The game runs a Pygame loop that:
-
-1. Reads window events and keyboard input.
-2. Updates the player, shots, asteroid field, and asteroids using frame time (`dt`).
-3. Checks collisions between the player, shots, and asteroids.
-4. Draws the current frame.
-5. Displays the frame and repeats.
-
-Game objects inherit from `CircleShape`, which provides a position, velocity, radius, and circle-based collision detection. Asteroids are drawn with irregular polygon points, so they are technically more lumpy than circles while still using simple circular collision rulesand 
-Large asteroids split into two smaller, faster asteroids when hit. Small asteroids disappear instead This is a classic arcade solution: when in doubt and why not make the problem smaller and give it friends.
+This project started as a hands-on exercise in game loops, sprite groups, vectors, collision detection and the particular joy of debugging something that moves in four dimensions when you only asked for two and for crying out loud why do i say this catch phrases damn it
 
 ## How To Play
 
-Run the game with:
-
-```bash
-uv run main.py
-```
-
 Controls:
-
+ 
  Key | Action 
 
  W to Move forward 
- S to Move backward |
- A to Rotate left |
- D to Rotate right |
- Space to Fire |
- Close the window to Quit |
+ S to Move backward 
+ A to Rotate left 
+ D to Rotate right 
+ Space to Fire 
+ esc the window to Quit or go back
 
-You start with three lives. Colliding with an asteroid costs one life and sends the ship back to the center. Shooting is limited by a short cooldown because holding Space should not turn the ship into an accidental paintball turret.
+You start with 100hp Colliding with an asteroid costs one diff hp and sends the ship blinks for some time as a varnuable time. Shooting is limited by a short cooldown because holding Space should not turn the ship into an accidental paintball turret(i kinda del that bec i like choas BUT each lvl has a shot and asteroids count limit).
 
-## Running Checks
-
-Compile the main modules with:
-
-```bash
-python3 -m py_compile main.py player.py asteroid.py asteroidfield.py shot.py circleshape.py
-```
-
-The game also writes runtime events and state snapshots to JSON Lines files. These files are useful for local debugging and are ignored by Git.
 
 ## Upgrades
 
@@ -58,15 +30,21 @@ Ideas for future versions:
 
 - Draw a small heart-based lives display instead of showing lives only through behavior(done)
 - Add a short invulnerability period after respawning.(done)
-- Add a score and a high-score table.
-- Add sound effects and background music.
-- Add a start screen, pause screen, and game-over screen.
+- Add a score and a high-score table.(done)
+- Add sound effects and background music.(done)
 - Add screen wrapping so objects leaving one edge return from the opposite side.(done)
-- Add particle effects when asteroids split.
-- Add different weapon types and power-ups.
-- Add a browser build for itch.io or GitHub Pages.
+- Add different weapon types and power-ups.(will do ut added skins and animations)
+- Add a browser build for itch.io or GitHub Pages.(made a relaese that has an exe file and itch when adding more things)
 
-## Project Status
+## anyways side note
 
 This is a small learning project in active development. The game is playable, but the asteroid field remains committed to making every quiet moment feel temporary.
-and i just read what i wrote and damn i may compete with ai for whos readme has an ai look >:[
+and i just read what i wrote and damn i may compete with ai for whos readme has an ai look >:[ oh and the wole version stuff is downwards
+
+## Versions
+heya
+I made the first release 1.4, but 1.0 was just the base game. It had only the core gameplay—no main menu, skin menu, or art—just the basic math and vectors.
+Version 1.1 added a main menu with a small title art, asteroids, and a classic plane. I also started adding levels, specifically easy and medium.
+Version 1.2 didn't have extra art, but it included two new levels, scoring, and a high score system for each level. I also added an audio mixer and custom damage for each asteroid.
+Version 1.3 brought a lot of new art, including background stars and a custom main title. I added a skin page with two skins, and each skin has two thrust animations complete with a preview. I also fixed bugs, such as the enter button issue; because Pygame requires custom mapping for each enter key, the Numpad enter wasn't working, so I fixed that. I added the Escape key to go back or exit, set limits for shots and asteroids in each level, and added custom damage settings for each level.
+Version 1.4 introduced even more custom art and details, along with plenty of bug fixes and stress testing. That is all for now!
