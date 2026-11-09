@@ -8,8 +8,10 @@ from constants import (
     PLAYER_SHOOT_COOLDOWN_SECONDS,
     PLAYER_SHOOT_SPEED,
     PLAYER_SPEED,
+    PLAYER_THRUST_FRAME_SECONDS,
     PLAYER_TURN_SPEED,
     SHOT_RADIUS,
+    ART_DIR,
 )
 from shot import Shot
 
@@ -25,10 +27,14 @@ class Player(CircleShape):
         y: float,
         shots: pygame.sprite.Group | None = None,
         shot_limit: int | None = None,
+        skin: str = "white",
+        thrust_animation: int = 0,
     ):
         super().__init__(x, y, PLAYER_RADIUS)
         self.shots = shots
         self.shot_limit = shot_limit
+        self.skin = skin
+        self.thrust_animation = thrust_animation
         self.rotation = 0.0
         self.shoot_cooldown = 0.0
         self.invulnerable_timer = 0.0
@@ -36,14 +42,53 @@ class Player(CircleShape):
         self.health_regen_timer = 0.0
         self.visual_radius = self.radius * PLAYER_SPRITE_SCALE
         sprite_size = (round(self.visual_radius * 2), round(self.visual_radius * 2))
+        skin_assets = {
+            "white": (
+                "plane.png",
+                (
+                    (
+                        "plane-thrust-white.png",
+                        "plane-thrust-white-2.png",
+                        "plane-thrust-white-3.png",
+                    ),
+                    (
+                        "plane-thrust-white-version2-1.png",
+                        "plane-thrust-white-version2-2.png",
+                        "plane-thrust-white-version2-3.png",
+                    ),
+                ),
+            ),
+            "red": (
+                "plane-red.png",
+                (
+                    (
+                        "plane-thrust-red.png",
+                        "plane-thrust-red2.png",
+                        "plane-thrust-red3.png",
+                    ),
+                    (
+                        "plane-thrust-red-version-2-1.png",
+                        "plane-thrust-red-version-2-2.png",
+                        "plane-thrust-red-version-2-3.png",
+                    ),
+                ),
+            ),
+        }
+        idle_name, thrust_names = skin_assets[skin]
+        thrust_names = thrust_names[thrust_animation]
         self.ship_image = pygame.transform.scale(
-            pygame.image.load("assets/art/plane.png").convert_alpha(),
+            pygame.image.load(ART_DIR / idle_name).convert_alpha(),
             sprite_size,
         )
-        self.thrust_image = pygame.transform.scale(
-            pygame.image.load("assets/art/plane-fire.png").convert_alpha(),
-            sprite_size,
-        )
+        self.thrust_images = [
+            pygame.transform.scale(
+                pygame.image.load(ART_DIR / image_name).convert_alpha(),
+                sprite_size,
+            )
+            for image_name in thrust_names
+        ]
+        self.thrust_frame_index = 0
+        self.thrust_frame_timer = 0.0
         self.fire_sound = None
         self.thrust_sound = None
         if pygame.mixer.get_init():
@@ -59,7 +104,11 @@ class Player(CircleShape):
             if int(self.invulnerable_timer * 10) % 2 == 0:
                 return
 
-        image = self.thrust_image if self.thrusting else self.ship_image
+        image = (
+            self.thrust_images[self.thrust_frame_index]
+            if self.thrusting
+            else self.ship_image
+        )
         rotated_image = pygame.transform.rotate(image, 180 - self.rotation)
         image_rect = rotated_image.get_rect(
             center=(round(self.position.x), round(self.position.y))
@@ -129,6 +178,16 @@ class Player(CircleShape):
 
         keys = pygame.key.get_pressed()
         self.set_thrusting(keys[pygame.K_w])
+        if self.thrusting:
+            self.thrust_frame_timer += dt
+            while self.thrust_frame_timer >= PLAYER_THRUST_FRAME_SECONDS:
+                self.thrust_frame_timer -= PLAYER_THRUST_FRAME_SECONDS
+                self.thrust_frame_index = (
+                    self.thrust_frame_index + 1
+                ) % len(self.thrust_images)
+        else:
+            self.thrust_frame_index = 0
+            self.thrust_frame_timer = 0.0
 
         if keys[pygame.K_a]:
             self.rotate(-dt)

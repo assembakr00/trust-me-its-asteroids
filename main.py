@@ -1,4 +1,5 @@
 import json
+import random
 from pathlib import Path
 
 import pygame
@@ -11,6 +12,7 @@ from constants import (
     ASTEROID_SCORE_MEDIUM,
     ASTEROID_SCORE_SMALL,
     PLAYER_MAX_HEALTH,
+    ART_DIR,
     SCREEN_HEIGHT,
     SCREEN_WIDTH,
 )
@@ -26,6 +28,7 @@ DIFFICULTY_OPTIONS = (
     ("Hard", 25, 20),
     ("Hardcore", None, 10),
 )
+SKIN_OPTIONS = ("white", "red")
 HIGH_SCORE_PATH = Path(__file__).with_name("high_scores.json")
 
 
@@ -59,6 +62,20 @@ def draw_centered_text(
 
 def audio_slider_rect(index: int) -> pygame.Rect:
     return pygame.Rect(SCREEN_WIDTH // 2 - 210, 310 + index * 120, 420, 12)
+
+
+def build_star_background(star_tile: pygame.Surface) -> pygame.Surface:
+    background = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+    background.fill("black")
+    small_star = pygame.transform.scale(star_tile, (8, 8))
+    randomizer = random.Random(42)
+    for _ in range(90):
+        position = (
+            randomizer.randrange(0, SCREEN_WIDTH - 8),
+            randomizer.randrange(0, SCREEN_HEIGHT - 8),
+        )
+        background.blit(small_star, position)
+    return background
 
 
 def load_high_scores() -> dict[str, list[int]]:
@@ -133,13 +150,24 @@ def main() -> None:
     title_font = pygame.font.Font(None, 72)
     body_font = pygame.font.Font(None, 36)
     small_font = pygame.font.Font(None, 24)
-    plaque_font = pygame.font.Font(None, 48)
-    subtitle_font = pygame.font.Font(None, 32)
-    title_image = pygame.image.load("assets/art/main-title.png").convert_alpha()
+    title_image = pygame.image.load(ART_DIR / "main-title.png").convert_alpha()
     title_image = pygame.transform.scale(title_image, (384, 192))
+    star_tile = pygame.image.load(ART_DIR / "star-bg.png").convert_alpha()
+    star_background = build_star_background(star_tile)
+    heart_image = pygame.transform.scale(
+        pygame.image.load(ART_DIR / "heart.png").convert_alpha(),
+        (28, 28),
+    )
     audio_enabled = pygame.mixer.get_init() is not None
     asteroid_sounds = {}
+    music_enabled = False
     if audio_enabled:
+        pygame.mixer.music.load(
+            Path(__file__).parent / "assets" / "music" / "bg.mp3"
+        )
+        pygame.mixer.music.set_volume(0.2)
+        pygame.mixer.music.play(-1)
+        music_enabled = True
         asteroid_sounds = {
             "small": pygame.mixer.Sound("assets/music/bangsmall/bangSmall.wav"),
             "medium": pygame.mixer.Sound("assets/music/bangmedium/bangMedium.wav"),
@@ -148,9 +176,65 @@ def main() -> None:
         for sound in asteroid_sounds.values():
             sound.set_volume(0.4)
     audio_levels = {"Master": 1.0, "Effects": 1.0}
+    skin_preview_images = {
+        "white": pygame.transform.scale(
+            pygame.image.load(ART_DIR / "plane.png").convert_alpha(), (96, 96)
+        ),
+        "red": pygame.transform.scale(
+            pygame.image.load(ART_DIR / "plane-red.png").convert_alpha(), (96, 96)
+        ),
+    }
+    skin_preview_frames = {
+        "white": [
+            [
+                pygame.transform.scale(
+                    pygame.image.load(ART_DIR / filename).convert_alpha(), (96, 96)
+                )
+                for filename in (
+                    "plane-thrust-white.png",
+                    "plane-thrust-white-2.png",
+                    "plane-thrust-white-3.png",
+                )
+            ],
+            [
+                pygame.transform.scale(
+                    pygame.image.load(ART_DIR / filename).convert_alpha(), (96, 96)
+                )
+                for filename in (
+                    "plane-thrust-white-version2-1.png",
+                    "plane-thrust-white-version2-2.png",
+                    "plane-thrust-white-version2-3.png",
+                )
+            ],
+        ],
+        "red": [
+            [
+                pygame.transform.scale(
+                    pygame.image.load(ART_DIR / filename).convert_alpha(), (96, 96)
+                )
+                for filename in (
+                    "plane-thrust-red.png",
+                    "plane-thrust-red2.png",
+                    "plane-thrust-red3.png",
+                )
+            ],
+            [
+                pygame.transform.scale(
+                    pygame.image.load(ART_DIR / filename).convert_alpha(), (96, 96)
+                )
+                for filename in (
+                    "plane-thrust-red-version-2-1.png",
+                    "plane-thrust-red-version-2-2.png",
+                    "plane-thrust-red-version-2-3.png",
+                )
+            ],
+        ],
+    }
 
     def apply_audio_levels() -> None:
         combined_volume = audio_levels["Master"] * audio_levels["Effects"]
+        if music_enabled:
+            pygame.mixer.music.set_volume(0.2 * audio_levels["Master"])
         for player_obj in players:
             if player_obj.fire_sound is not None:
                 player_obj.fire_sound.set_volume(0.35 * combined_volume)
@@ -169,6 +253,9 @@ def main() -> None:
 
     game_state = "menu"
     difficulty_index = 0
+    skin_index = 0
+    skin_name = SKIN_OPTIONS[skin_index]
+    thrust_animation_index = 0
     difficulty_name = DIFFICULTY_OPTIONS[difficulty_index][0]
     level = 1
     level_notice_timer = 0.0
@@ -177,10 +264,14 @@ def main() -> None:
     high_scores = load_high_scores()
     selected_audio_slider = 0
     dragging_audio_slider = None
+    preview_frame = 0
+    preview_timer = 0.0
 
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                if audio_enabled:
+                    pygame.mixer.music.stop()
                 return
             if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                 dragging_audio_slider = None
@@ -201,6 +292,8 @@ def main() -> None:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     if game_state == "menu":
+                        if audio_enabled:
+                            pygame.mixer.music.stop()
                         return
                     if game_state == "audio_settings":
                         game_state = "menu"
@@ -220,6 +313,26 @@ def main() -> None:
                     if game_state == "menu":
                         game_state = "audio_settings"
                     elif game_state == "audio_settings":
+                        game_state = "menu"
+                    continue
+                if event.key == pygame.K_TAB:
+                    if game_state == "menu":
+                        game_state = "skin_menu"
+                    elif game_state == "skin_menu":
+                        game_state = "menu"
+                    continue
+                if game_state == "skin_menu":
+                    if event.key in (pygame.K_LEFT, pygame.K_RIGHT):
+                        direction = 1 if event.key == pygame.K_RIGHT else -1
+                        skin_index = (skin_index + direction) % len(SKIN_OPTIONS)
+                        skin_name = SKIN_OPTIONS[skin_index]
+                    elif event.key in (pygame.K_UP, pygame.K_DOWN):
+                        direction = 1 if event.key == pygame.K_DOWN else -1
+                        thrust_animation_index = (
+                            thrust_animation_index + direction
+                        ) % 2
+                        preview_frame = 0
+                    elif event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
                         game_state = "menu"
                     continue
                 if game_state == "audio_settings":
@@ -252,7 +365,10 @@ def main() -> None:
                     difficulty_index = (
                         difficulty_index + direction
                     ) % len(DIFFICULTY_OPTIONS)
-                if game_state in ("menu", "game_over") and event.key == pygame.K_RETURN:
+                if game_state in ("menu", "game_over") and event.key in (
+                    pygame.K_RETURN,
+                    pygame.K_KP_ENTER,
+                ):
                     for group in (drawable, updatable, players, asteroids, shots):
                         group.empty()
                     level = 1
@@ -265,6 +381,8 @@ def main() -> None:
                         y=SCREEN_HEIGHT / 2,
                         shots=shots,
                         shot_limit=shot_limit,
+                        skin=skin_name,
+                        thrust_animation=thrust_animation_index,
                     )
                     if player_obj.fire_sound is not None:
                         player_obj.fire_sound.set_volume(
@@ -334,9 +452,56 @@ def main() -> None:
                 asteroid_field.start_level(level)
                 level_notice_timer = 2.5
 
-        screen.fill("black")
+        if game_state == "skin_menu":
+            preview_timer += dt
+            while preview_timer >= 0.1:
+                preview_timer -= 0.1
+                preview_frame = (preview_frame + 1) % len(
+                    skin_preview_frames[skin_name][thrust_animation_index]
+                )
 
-        if game_state == "audio_settings" and not audio_enabled:
+        screen.blit(star_background, (0, 0))
+
+        if game_state == "skin_menu":
+            draw_centered_text(screen, title_font, "CHOOSE YOUR SHIP", 110)
+            draw_centered_text(
+                screen,
+                small_font,
+                "LEFT / RIGHT: skin    UP / DOWN: thrust style    ENTER: confirm",
+                165,
+            )
+            for index, name in enumerate(SKIN_OPTIONS):
+                center_x = SCREEN_WIDTH // 2 - 180 + index * 360
+                panel = pygame.Rect(center_x - 135, 220, 270, 300)
+                panel_color = (35, 75, 85) if index == skin_index else (25, 25, 35)
+                pygame.draw.rect(screen, panel_color, panel, border_radius=8)
+                pygame.draw.rect(
+                    screen,
+                    (100, 220, 200) if index == skin_index else (80, 80, 90),
+                    panel,
+                    3,
+                    border_radius=8,
+                )
+                idle_image = skin_preview_images[name]
+                idle_rect = idle_image.get_rect(center=(center_x, 330))
+                screen.blit(idle_image, idle_rect)
+                thrust_image = skin_preview_frames[name][thrust_animation_index][
+                    preview_frame
+                ]
+                thrust_rect = thrust_image.get_rect(center=(center_x, 430))
+                screen.blit(thrust_image, thrust_rect)
+                skin_label = body_font.render(name.upper(), True, "white")
+                screen.blit(
+                    skin_label,
+                    skin_label.get_rect(center=(center_x, 480)),
+                )
+            draw_centered_text(
+                screen,
+                small_font,
+                f"THRUST STYLE {thrust_animation_index + 1}    TAB / ESC: menu",
+                570,
+            )
+        elif game_state == "audio_settings" and not audio_enabled:
             draw_centered_text(screen, title_font, "AUDIO MIXER", 190)
             draw_centered_text(screen, body_font, "Audio output unavailable", 310)
             draw_centered_text(
@@ -374,8 +539,6 @@ def main() -> None:
             )
         elif game_state == "menu":
             screen.blit(title_image, title_image.get_rect(center=(SCREEN_WIDTH // 2, 125)))
-            draw_centered_text(screen, subtitle_font, "TRUST ME, IT'S", 94, "black")
-            draw_centered_text(screen, plaque_font, "ASTEROIDS", 145, "black")
             draw_centered_text(
                 screen, small_font, "W / S: thrust and reverse    A / D: turn    SPACE: fire", 245
             )
@@ -405,13 +568,13 @@ def main() -> None:
                 f"LEFT / RIGHT to change  |  {limit_text}  |  {shot_limit_text}",
                 365,
             )
-            draw_centered_text(screen, body_font, "ENTER: start", 415)
-            pygame.draw.line(screen, (70, 70, 70), (160, 465), (SCREEN_WIDTH - 160, 465), 2)
-            draw_centered_text(screen, body_font, "HIGH SCORES", 500)
+            draw_centered_text(screen, body_font, "ENTER: start", 430)
+            pygame.draw.line(screen, (70, 70, 70), (160, 480), (SCREEN_WIDTH - 160, 480), 2)
+            draw_centered_text(screen, body_font, "HIGH SCORES", 510)
             for column, (name, _, _) in enumerate(DIFFICULTY_OPTIONS):
                 column_x = round(SCREEN_WIDTH * (column + 0.5) / len(DIFFICULTY_OPTIONS))
                 heading = small_font.render(name.upper(), True, "white")
-                screen.blit(heading, heading.get_rect(center=(column_x, 535)))
+                screen.blit(heading, heading.get_rect(center=(column_x, 545)))
                 for rank in range(3):
                     scores = high_scores[name]
                     score_label = str(scores[rank]) if rank < len(scores) else "-"
@@ -420,10 +583,10 @@ def main() -> None:
                     )
                     screen.blit(
                         score_surface,
-                        score_surface.get_rect(center=(column_x, 560 + rank * 25)),
+                        score_surface.get_rect(center=(column_x, 570 + rank * 25)),
                     )
             draw_centered_text(
-                screen, small_font, "M: audio mixer    |    ESC: quit", 675
+                screen, small_font, "TAB: skins    M: audio mixer    |    ESC: quit", 675
             )
         elif game_state in ("playing", "paused"):
             for obj in drawable:
@@ -453,6 +616,12 @@ def main() -> None:
                     f"HP: {player_obj.health}/{PLAYER_MAX_HEALTH}", True, "white"
                 )
                 screen.blit(health_text, (24, 58))
+                heart_count = (player_obj.health + 19) // 20
+                for heart_index in range(5):
+                    heart = heart_image.copy()
+                    if heart_index >= heart_count:
+                        heart.set_alpha(55)
+                    screen.blit(heart, (24 + heart_index * 32, 90))
 
             score_text = body_font.render(f"SCORE: {score}", True, "white")
             screen.blit(

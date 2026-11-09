@@ -2,7 +2,7 @@ import pygame
 import random
 from logger import log_event
 from circleshape import CircleShape
-from constants import ASTEROID_MIN_RADIUS
+from constants import ART_DIR, ASTEROID_MIN_RADIUS
 
 ASTEROID_VISUAL_SCALE = 1.25
 
@@ -16,13 +16,13 @@ class Asteroid(CircleShape):
         if not Asteroid.sprite_images:
             Asteroid.sprite_images = {
                 "large": pygame.image.load(
-                    "assets/art/asteroid-large.png"
+                    ART_DIR / "asteroid-large.png"
                 ).convert_alpha(),
                 "medium": pygame.image.load(
-                    "assets/art/Asteroids-medium.png"
+                    ART_DIR / "Asteroids-medium.png"
                 ).convert_alpha(),
                 "small": pygame.image.load(
-                    "assets/art/asteroid-small.png"
+                    ART_DIR / "asteroid-small.png"
                 ).convert_alpha(),
             }
 
