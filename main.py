@@ -13,6 +13,7 @@ from constants import (
     ASTEROID_SCORE_SMALL,
     PLAYER_MAX_HEALTH,
     ART_DIR,
+    resource_path,
     SCREEN_HEIGHT,
     SCREEN_WIDTH,
 )
@@ -163,15 +164,21 @@ def main() -> None:
     music_enabled = False
     if audio_enabled:
         pygame.mixer.music.load(
-            Path(__file__).parent / "assets" / "music" / "bg.mp3"
+            resource_path("assets/music/bg.mp3")
         )
         pygame.mixer.music.set_volume(0.2)
         pygame.mixer.music.play(-1)
         music_enabled = True
         asteroid_sounds = {
-            "small": pygame.mixer.Sound("assets/music/bangsmall/bangSmall.wav"),
-            "medium": pygame.mixer.Sound("assets/music/bangmedium/bangMedium.wav"),
-            "large": pygame.mixer.Sound("assets/music/banglarge/bangLarge.wav"),
+            "small": pygame.mixer.Sound(
+                resource_path("assets/music/bangsmall/bangSmall.wav")
+            ),
+            "medium": pygame.mixer.Sound(
+                resource_path("assets/music/bangmedium/bangMedium.wav")
+            ),
+            "large": pygame.mixer.Sound(
+                resource_path("assets/music/banglarge/bangLarge.wav")
+            ),
         }
         for sound in asteroid_sounds.values():
             sound.set_volume(0.4)

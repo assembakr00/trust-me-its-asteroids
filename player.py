@@ -12,6 +12,7 @@ from constants import (
     PLAYER_TURN_SPEED,
     SHOT_RADIUS,
     ART_DIR,
+    resource_path,
 )
 from shot import Shot
 
@@ -92,9 +93,13 @@ class Player(CircleShape):
         self.fire_sound = None
         self.thrust_sound = None
         if pygame.mixer.get_init():
-            self.fire_sound = pygame.mixer.Sound("assets/music/fire/fire.wav")
+            self.fire_sound = pygame.mixer.Sound(
+                resource_path("assets/music/fire/fire.wav")
+            )
             self.fire_sound.set_volume(0.35)
-            self.thrust_sound = pygame.mixer.Sound("assets/music/thrust/thrust.wav")
+            self.thrust_sound = pygame.mixer.Sound(
+                resource_path("assets/music/thrust/thrust.wav")
+            )
             self.thrust_sound.set_volume(0.25)
         self.thrust_channel = None
         self.thrusting = False

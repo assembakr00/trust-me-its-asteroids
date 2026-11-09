@@ -1,6 +1,16 @@
+import os
+import sys
 from pathlib import Path
 
-ART_DIR = Path(__file__).parent / "assets" / "art" / "trust me its asteroids"
+def resource_path(relative_path: str) -> str:
+	try:
+		base_path = sys._MEIPASS
+	except Exception:
+		base_path = os.path.abspath(".")
+	return os.path.join(base_path, relative_path)
+
+
+ART_DIR = Path(resource_path("assets/art/trust me its asteroids"))
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
 PLAYER_RADIUS = 20
